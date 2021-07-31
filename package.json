@@ -1,6 +1,6 @@
 {
   "name": "gojek-api",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -12,5 +12,5 @@
   "dependencies": {
     "axios": "^0.21.1",
     "uuid": "^8.3.2"
-  }
+  },"repository": "github:gandol/gojek-api"
 }
