@@ -101,7 +101,11 @@ class GopayApi {
             this.deletePinHeader()
             return data?.data
         } catch (error) {
-            if (error?.response?.data?.error?.description) console.log("Error \t", error.response.data.error.description);
+            if (error?.response?.data?.error?.description){
+                if(error.response.data.error.description == "You entered an incorrect PIN. Try again.") return false
+                console.log("Error \t", error.response.data.error.description);
+                return true 
+            }
             return false
         }
     }
