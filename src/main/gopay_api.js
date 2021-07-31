@@ -126,6 +126,27 @@ class GopayApi {
         }
         return false
     }
+    async createPaymentQrisGopay(qrString = "", pin = "") {
+        let dataExplore = await this.parseQr(qrString)
+        const { token } = await this.getGopayData()
+        if (token) {
+            const { additional_data, amount, channel_type, checksum, fetch_promotion_details, metadata, order_signature, payee, payment_intent } = dataExplore.data
+            const dataPayment = { additional_data, amount, channel_type, checksum, fetch_promotion_details, metadata, order_signature, payee, payment_intent: "DYNAMIC_QR" }
+            const dataPaymetInitialize = await this.paymentQr(dataPayment)
+            const { payment_id } = dataPaymetInitialize.data
+            const applied_promo_code = [
+                "rQk2-Ala0nPrR99Wvadm"
+            ]
+            const dataPaymentFinal = { additional_data, channel_type:"DYNAMIC_QR", checksum, applied_promo_code, metadata, order_signature, payment_token: token }
+            const payToQris = await this.payGopay(dataPaymentFinal, payment_id, pin)
+            console.log(payToQris);
+
+            if (payToQris) {
+                return payToQris;
+            }
+        }
+        return false
+    }
     /**
      * 
      * @param {int} page 
