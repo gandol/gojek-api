@@ -1,18 +1,46 @@
+const { v4 } = require("uuid")
 const { config } = require("../config")
 const { RequestGojekApi, RequestGojekId } = require("../helpers/RequestHandler")
 
 class GojekApi {
     constructor() {
+        this.session_id = ""
+        this.deviceId = ""
         RequestGojekApi.interceptors.request.use(request => {
-            // console.log(request.headers)
+            console.log(request.headers)
+            return request
+        })
+        RequestGojekId.interceptors.request.use(request => {
             return request
         })
     }
 
-    setAuthHeader(gojek_token = "") {
+    async setAuthHeader(gojek_token = "") {
         if (gojek_token) {
             this.gojek_token = gojek_token
-            RequestGojekApi.defaults.headers.common["Authorization"] = `Bearer ${this.gojek_token}`
+            RequestGojekApi.defaults.headers.common["Authorization"] = `Bearer ${gojek_token}`
+        }
+    }
+
+    /**
+     * @param {string} session_id generate from uuid v4
+     */
+
+    async setSessionId(session_id = "") {
+        if (session_id) {
+            RequestGojekApi.defaults.headers.common["X-Session-Id"] = session_id
+            this.session_id = session_id
+        }
+    }
+
+    /**
+     * 
+     * @param {string} deviceId set the device id of the client
+     */
+    async setdeviceId(deviceId = "") {
+        if (deviceId) {
+            RequestGojekApi.defaults.headers.common["X-Uniqueid"] = deviceId
+            this.deviceId = deviceId
         }
     }
 
@@ -32,7 +60,8 @@ class GojekApi {
         }
         try {
             const { data } = await RequestGojekApi.post("/v5/customers", dataPost)
-            return data?.data
+            const returnData = { ...data?.data, deviceId: this.deviceId, session_id: this.session_id }
+            return returnData
         } catch (error) {
             console.log(error.response.data);
             return false;
@@ -45,18 +74,65 @@ class GojekApi {
      * @param {string} otp_token 
      * @returns 
      */
-    async validateOtpRegist(otp = "", otp_token = "") {
+    async validateOtpRegist(otp="", otp_token = "") {
         let dataPost = {
             client_name: "gojek:consumer:app",
             client_secret: config.client_secret,
             data: {
-                otp,
+                otp:otp.toString(),
                 otp_token
             }
         }
         try {
             const { data } = await RequestGojekApi.post("/v5/customers/phone/verify", dataPost)
             return data?.data
+        } catch (error) {
+            return error.response.data
+        }
+    }
+
+    /**
+     * 
+     * @param {string} phone_number without 0 like 857755****** or etc
+     * @returns 
+     */
+    async loginRequest(phone_number = "") {
+        RequestGojekId.defaults.headers.common["X-Session-Id"] = this.session_id
+        RequestGojekId.defaults.headers.common["X-Uniqueid"] = this.deviceId
+        let dataPost = {
+            client_id: "gojek:consumer:app",
+            client_secret: config.client_secret,
+            country_code: "+62",
+            magic_link_ref: v4(),
+            phone_number
+        }
+        try {
+            const { data } = await RequestGojekId.post("/goid/login/request", dataPost)
+            return data
+        } catch (error) {
+            return error.response.data
+        }
+    }
+
+    /**
+     * 
+     * @param {string} otp_token otp token from loginRequest
+     * @param {string} otp_code otp from gojek
+     * @returns json
+     */
+    async getAuthTokenFromOtp(otp_token = "", otp_code = "") {
+        let dataPost = {
+            client_name: "gojek:consumer:app",
+            client_secret: config.client_secret,
+            data: {
+                otp_token,
+                otp: otp_code
+            },
+            grant_type: "otp",
+        }
+        try {
+            const { data } = await RequestGojekId.post("/goid/token", dataPost)
+            return data
         } catch (error) {
             return false
         }
@@ -68,8 +144,12 @@ class GojekApi {
      * @returns the new auth token and new refresh token
      */
     async getRefreshTOken(refresh_token = "") {
+        RequestGojekId.defaults.headers.common["X-Session-Id"] = this.session_id
+        RequestGojekId.defaults.headers.common["X-Uniqueid"] = this.deviceId
+        // RequestGojekId.defaults.headers.common["Authorization"] = `Bearer ${this.gojek_token}`
+
         let dataPost = {
-            client_name: "gojek:consumer:app",
+            client_id: "gojek:consumer:app",
             client_secret: config.client_secret,
             data: {
                 refresh_token
@@ -81,8 +161,7 @@ class GojekApi {
             const { data } = await RequestGojekId.post("/goid/token", dataPost)
             return data
         } catch (error) {
-            console.log(error.response.data);
-            return false
+            return error.response.data
         }
     }
 

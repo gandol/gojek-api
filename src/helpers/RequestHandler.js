@@ -5,8 +5,6 @@ const Request = Axios.create({
     baseURL: config.gopay_base_url,
     headers: {
         "Accept": "application/json",
-        "X-Session-Id": "dac51abf-b314-482e-b34a-0a5deb52aeee",
-        "X-Uniqueid": "7c975b83-fe0a-4318-9fef-ffb2d7545d71",
         "X-Appversion": "4.20.1",
         "X-Appid": "com.gojek.app",
         "X-Platform": "Android",
@@ -32,8 +30,6 @@ const RequestGojekApi = Axios.create({
     baseURL: config.gojek_base_url,
     headers: {
         "Accept": "application/json",
-        "X-Session-Id": "dac51abf-b314-482e-b34a-0a5deb52aeee",
-        "X-Uniqueid": "7c975b83-fe0a-4318-9fef-ffb2d7545d71",
         "X-Appversion": "4.20.1",
         "X-Appid": "com.gojek.app",
         "X-Platform": "Android",
@@ -58,8 +54,6 @@ const RequestGojekId = Axios.create({
     baseURL: config.goid_base_url,
     headers: {
         "Accept": "application/json",
-        "X-Session-Id": "dac51abf-b314-482e-b34a-0a5deb52aeee",
-        "X-Uniqueid": "7c975b83-fe0a-4318-9fef-ffb2d7545d71",
         "X-Appversion": "4.24.2",
         "X-Appid": "com.gojek.app",
         "X-Platform": "Android",

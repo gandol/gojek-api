@@ -5,6 +5,8 @@ class GopayApi {
     constructor(gojek_token) {
         this.gojek_token = gojek_token
         this.setAuthHeader()
+        this.session_id = ""
+        this.deviceId = ""
     }
 
     setAuthHeader() {
@@ -31,9 +33,32 @@ class GopayApi {
     setUuidHeader() {
         Request.defaults.headers.common["Idempotency-Key"] = v4()
     }
+
     deleteUuidHeader() {
         delete Request.defaults.headers.common["Idempotency-Key"]
     }
+
+    /**
+     * @param {string} session_id generate from uuid v4
+     */
+    async setSessionId(session_id = "") {
+        if (session_id) {
+            Request.defaults.headers.common["X-Session-Id"] = session_id
+            this.session_id = session_id
+        }
+    }
+
+    /**
+     * 
+     * @param {string} deviceId set the device id of the client
+     */
+    async setdeviceId(deviceId = "") {
+        if (deviceId) {
+            Request.defaults.headers.common["X-Uniqueid"] = deviceId
+            this.deviceId = deviceId
+        }
+    }
+
     /**
      * 
      * @param {string} qrString the string of qr
@@ -87,6 +112,7 @@ class GopayApi {
             return false
         }
     }
+    
     /**
      * 
      * @param {object} dataPost 
@@ -101,14 +127,15 @@ class GopayApi {
             this.deletePinHeader()
             return data?.data
         } catch (error) {
-            if (error?.response?.data?.error?.description){
-                if(error.response.data.error.description == "You entered an incorrect PIN. Try again.") return false
+            if (error?.response?.data?.error?.description) {
+                if (error.response.data.error.description == "You entered an incorrect PIN. Try again.") return false
                 console.log("Error \t", error.response.data.error.description);
-                return true 
+                return true
             }
             return false
         }
     }
+
     /**
      * 
      * @param {string} qrString 
@@ -130,7 +157,15 @@ class GopayApi {
         }
         return false
     }
-    async createPaymentQrisGopay(qrString = "", pin = "") {
+
+    /**
+     * 
+     * @param {string} qrString the parsed qris
+     * @param {number} pin six digits of the pin
+     * @param {Array} promo the applied promo list
+     * @returns boolean false if any error and return response  from gopay if success
+     */
+    async createPaymentQrisGopay(qrString = "", pin = "", promo = []) {
         let dataExplore = await this.parseQr(qrString)
         const { token } = await this.getGopayData()
         if (token) {
@@ -138,10 +173,8 @@ class GopayApi {
             const dataPayment = { additional_data, amount, channel_type, checksum, fetch_promotion_details, metadata, order_signature, payee, payment_intent: "DYNAMIC_QR" }
             const dataPaymetInitialize = await this.paymentQr(dataPayment)
             const { payment_id } = dataPaymetInitialize.data
-            const applied_promo_code = [
-                "rQk2-Ala0nPrR99Wvadm"
-            ]
-            const dataPaymentFinal = { additional_data, channel_type:"DYNAMIC_QR", checksum, applied_promo_code, metadata, order_signature, payment_token: token }
+            const applied_promo_code = promo
+            const dataPaymentFinal = { additional_data, channel_type: "DYNAMIC_QR", checksum, applied_promo_code, metadata, order_signature, payment_token: token }
             const payToQris = await this.payGopay(dataPaymentFinal, payment_id, pin)
             console.log(payToQris);
 
@@ -151,6 +184,7 @@ class GopayApi {
         }
         return false
     }
+
     /**
      * 
      * @param {int} page 
