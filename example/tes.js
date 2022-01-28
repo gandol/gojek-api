@@ -17,7 +17,7 @@ const { GopayApi, GojekApi } = require('../index');
         // await gojekApi.getOtpRegist("email","the account name","628377777777")
         // await gojekApi.validateOtpRegist("0000","the token from otp regist")
 
-        const data = await gojekApi.loginRequest("85850332817")//without +62 or 62
+        const data = await gojekApi.loginRequest("628377777777")//without +62 or 62
         console.log(data);
         // const loginRequest = await gojekApi.getRefreshTOken(dataRefresh)
         // if (loginRequest.access_token) {
